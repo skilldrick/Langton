@@ -7,7 +7,7 @@
   var heightInBlocks = 100;
   var width = widthInBlocks * blockSize;
   var height = heightInBlocks * blockSize;
-  var frameLength = 100;
+  var frameLength = 1;
   var counter = 0;
   var NORTH = 0;
   var EAST = 1;
@@ -19,37 +19,61 @@
   function Ant(x, y) {
     this.x = x;
     this.y = y;
-    this.direction = SOUTH;
+    this.prevX = x;
+    this.prevY = y;
+    this.direction = EAST;
   }
 
   Ant.prototype.draw = function () {
     ctx.save();
-    ctx.fillStyle = 'yellow';
-    ctx.fillRect(this.x * blockSize, this.y * blockSize, blockSize, blockSize);
+
+    //first fill in previous square
+    var colour = grid[this.prevY][this.prevX];
+    drawCell(colour, this.prevX, this.prevY);
+
+    //then fill in current square yellow
+    drawCell('yellow', this.x, this.y);
+
     ctx.restore();
   };
 
   Ant.prototype.move = function () {
+    this.prevX = this.x;
+    this.prevY = this.y;
+
     var currentColour = grid[this.y][this.x];
-    if (currentColour == 'white') {
+    if (currentColour == 'white'/* && (Math.random() < 0.99)*/) {
       this.direction = (this.direction + 3) % 4;
       grid[this.y][this.x] = 'black';
     } else {
       this.direction = (this.direction + 1) % 4;
       grid[this.y][this.x] = 'white';
     }
+
     switch (this.direction) {
     case NORTH:
-      this.y += 1;
+      this.y -= 1;
+      if (this.y < 0) {
+        this.y = heightInBlocks - 1;
+      }
       break;
     case EAST:
       this.x += 1;
+      if (this.x >= widthInBlocks) {
+        this.x = 0;
+      }
       break;
     case SOUTH:
-      this.y -= 1;
+      this.y += 1;
+      if (this.y >= heightInBlocks) {
+        this.y = 0;
+      }
       break;
     case WEST:
       this.x -= 1;
+      if (this.x < 0) {
+        this.x = widthInBlocks - 1;
+      }
       break;
     }
   };
@@ -73,23 +97,33 @@
       }
       grid.push(row);
     }
+
+    drawGrid();
+
     gameLoop();
   }
 
   setup();
 
-  function draw() {
-    ctx.clearRect(0, 0, width, height);
-    ctx.strokeStyle = 'black';
+  function drawCell(colour, x, y) {
+    ctx.fillStyle = colour;
+    ctx.fillRect(x * blockSize, y * blockSize, blockSize, blockSize);
+
+    ctx.strokeStyle = '#ccc';
     ctx.lineWidth = 1;
+    ctx.strokeRect(x * blockSize + 0.5, y * blockSize + 0.5, blockSize, blockSize);
+  }
+
+  function drawGrid() {
+    ctx.clearRect(0, 0, width, height);
     grid.forEach(function (row, y) {
-      row.forEach(function (cell, x) {
-        ctx.fillStyle = cell;
-        ctx.fillRect(x * blockSize + 0.5, y * blockSize + 0.5, blockSize, blockSize);
-        ctx.strokeRect(x * blockSize + 0.5, y * blockSize + 0.5, blockSize, blockSize);
+      row.forEach(function (colour, x) {
+        drawCell(colour, x, y);
       });
     });
+  }
 
+  function draw() {
     ants.forEach(function (ant) {
       ant.draw();
     });
