@@ -144,8 +144,11 @@
 
   $(document).ready(function () {
     $('canvas').click(function (e) {
-      var x = Math.floor(e.offsetX / blockSize);
-      var y = Math.floor(e.offsetY / blockSize);
+      var $el = $(this);
+      var relativeX = e.pageX - $el.offset().left;
+      var relativeY = e.pageY - $el.offset().top;
+      var x = Math.floor(relativeX / blockSize);
+      var y = Math.floor(relativeY / blockSize);
 
       ants.push(new Ant(x, y));
     });
